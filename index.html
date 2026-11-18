@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>COBRAS: Conditional Optimal Bridge for Riemannian Activation Steering</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="COBRAS casts activation steering as a Schrödinger Bridge on the hypersphere of residual-stream activations: a steering field that adapts to each activation, plus a support gate that leaves out-of-distribution prompts alone. NeurIPS 2026.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="COBRAS: Conditional Optimal Bridge for Riemannian Activation Steering">
+    <meta property="og:description" content="Activation steering as a Schrödinger Bridge on the activation hypersphere. Better helpfulness, truthfulness, and detoxification than prior steering methods, while largely preserving MMLU and GSM8K accuracy.">
+    <meta property="og:url" content="https://cobras-steer.github.io/">
+    <meta property="og:image" content="https://cobras-steer.github.io/static/img/cover.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="COBRAS: Conditional Optimal Bridge for Riemannian Activation Steering">
+    <meta name="twitter:description" content="Activation steering as a Schrödinger Bridge on the activation hypersphere. NeurIPS 2026.">
+    <meta name="twitter:image" content="https://cobras-steer.github.io/static/img/cover.png">
+    <link rel="icon" type="image/svg+xml" href="static/img/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <link rel="stylesheet" href="static/css/site.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" defer></script>
+    <script src="static/js/toy.js" defer></script>
+    <script src="static/js/globe.js" defer></script>
+    <script src="static/js/charts.js" defer></script>
+    <script src="static/js/page.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="#top" class="wordmark"><img src="static/img/logo.svg" alt="" class="mark">COBRAS</a>
+      <nav>
+        <a href="https://arxiv.org/abs/2607.10517" target="_blank" rel="noopener">Paper</a>
+        <a href="https://github.com/arshandalili/cobras" target="_blank" rel="noopener">Code</a>
+        <a href="#citation">Cite</a>
+      </nav>
+    </header>
+
+    <div id="top" class="post-heading">
+      <p class="eyebrow">COBRAS</p>
+      <h1 class="post-title">Conditional Optimal Bridge for Riemannian Activation Steering</h1>
+      <p class="post-subtitle">Steering language models along a Schrödinger Bridge on the hypersphere where their activations live</p>
+      <div class="publish-metadata">
+        <p class="authors">Seyed Arshan Dalili<sup>1</sup>, Ajay Narayanan Sridhar<sup>2</sup>, Vijaykrishnan Narayanan<sup>2</sup>, Mehrdad Mahdavi<sup>1</sup></p>
+        <p class="affiliations"><sup>1</sup>The Pennsylvania State University &nbsp;·&nbsp; <sup>2</sup>Georgia Institute of Technology</p>
+      </div>
+      <p class="venue">NeurIPS 2026</p>
+      <div class="resource-links">
+        <a href="https://arxiv.org/abs/2607.10517" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>arXiv</a>
+        <a href="https://arxiv.org/pdf/2607.10517" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>PDF</a>
+        <a href="https://github.com/arshandalili/cobras" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>Code</a>
+        <a href="#citation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.76-2-2-2H4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .01-1 1.03V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.76-2-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>BibTeX</a>
+      </div>
+      <p class="tldr"><b>TL;DR</b>COBRAS fits a Schrödinger Bridge from undesired to desired activations on the activation hypersphere. The bridge gives a steering field that adapts to each activation, plus a support score that turns steering off for prompts the contrastive data do not cover. It beats prior steering methods in nearly all model–task settings for helpfulness, truthfulness, and detoxification, while largely preserving MMLU and GSM8K accuracy.</p>
+    </div>
+
+    <div class="post-cover">
+      <div class="fig" data-globe="cover"><div class="globe cover-globe"></div></div>
+      <p class="cover-cap">Undesired activations (brick) follow the COBRAS steering field to the desired activations (blue) on a toy 2-sphere. The prompt at upper left has no support in the contrastive data, so its gate is zero and it stays where it is. <span class="hint">Drag to rotate.</span></p>
+    </div>
+
+    <div class="post-shell">
+      <nav aria-label="Table of contents" class="left-toc">
+        <ul>
+          <li><a href="#sphere" data-sec="sphere">Activations live on a sphere</a></li>
+          <li><a href="#bridge" data-sec="bridge">Steering as a Schrödinger Bridge</a></li>
+          <li><a href="#fit" data-sec="fit">Fitting the bridge on contrastive data</a></li>
+          <li><a href="#field" data-sec="field">A steering field for every activation</a></li>
+          <li><a href="#strength" data-sec="strength">How far to steer, and whether to steer</a></li>
+          <li><a href="#procedure" data-sec="procedure">The full procedure</a></li>
+          <li><a href="#unified" data-sec="unified">Steering methods as log-density-ratio flows</a></li>
+          <li><a href="#results" data-sec="results">Helpfulness, truthfulness, detoxification</a></li>
+          <li><a href="#ood" data-sec="ood">Steering without breaking other skills</a></li>
+          <li><a href="#examples" data-sec="examples">What the answers look like</a></li>
+          <li><a href="#ablations" data-sec="ablations">What each part does, and what it costs</a></li>
+          <li><a href="#limitations" data-sec="limitations">Limitations</a></li>
+          <li><a href="#citation" data-sec="citation">Citation</a></li>
+        </ul>
+      </nav>
+
+      <article class="content">
+        <p>
+Activation steering changes what a language model does by editing its hidden activations at inference time, without touching the weights.<label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle"><span class="sidenote"><a href="https://aclanthology.org/2024.acl-long.828/" target="_blank" rel="noopener">Steering Llama 2 via Contrastive Activation Addition</a> (Rimsky et al., 2024)<br><a href="https://arxiv.org/abs/2306.03341" target="_blank" rel="noopener">Inference-Time Intervention</a> (Li et al., 2023)</span>
+The usual motivation is the linear representation hypothesis: properties such as truthfulness, sentiment, or toxicity appear to correspond to roughly linear directions in activation space, so moving an activation along such a direction should move the behavior.<label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle"><span class="sidenote"><a href="https://arxiv.org/abs/2311.03658" target="_blank" rel="noopener">The Linear Representation Hypothesis and the Geometry of Large Language Models</a> (Park, Choe and Veitch, 2023)</span>
+        </p>
+        <p>
+The simplest recipe collects activations from inputs that show a desired and an undesired behavior, takes the difference of their means, and adds that vector to every activation. Later methods replace the single vector with continuous steering fields,<label for="sn-3" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-3" class="margin-toggle"><span class="sidenote"><a href="https://arxiv.org/abs/2602.17560" target="_blank" rel="noopener">ODESteer</a> (Zhao et al., 2026)<br><a href="https://arxiv.org/abs/2502.04556" target="_blank" rel="noopener">TruthFlow</a> (Wang et al., 2025)</span>
+transport maps between the two activation distributions,<label for="sn-4" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-4" class="margin-toggle"><span class="sidenote"><a href="https://openreview.net/forum?id=l2zFn6TIQi" target="_blank" rel="noopener">Controlling Language and Diffusion Models by Transporting Activations</a> (Rodriguez et al., 2025)</span>
+or norm-preserving rotations,<label for="sn-5" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-5" class="margin-toggle"><span class="sidenote"><a href="https://arxiv.org/abs/2409.10053" target="_blank" rel="noopener">Householder Pseudo-Rotation</a> (Pham and Nguyen, 2024)<br><a href="https://arxiv.org/abs/2602.08169" target="_blank" rel="noopener">Spherical Steering</a> (You, Deng and Chen, 2026)</span>
+and some of them adapt the update to the current activation. Two questions remain open. What population-level objective are these methods optimizing? Many of them implicitly follow a log-density-ratio between desired and undesired activations, without deriving it from a well-posed problem. And when should a steering field be applied at all? A direction fitted on TruthfulQA says nothing about whether the same edit is appropriate for a grade-school math problem. In our experiments, several strong baselines improve TruthfulQA while losing much of their MMLU and GSM8K accuracy.<label for="sn-6" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-6" class="margin-toggle"><span class="sidenote">Steering vectors are known to be unreliable across inputs and to misgeneralize out of distribution: <a href="https://arxiv.org/abs/2407.12404" target="_blank" rel="noopener">Tan et al. (2024)</a>, <a href="https://arxiv.org/abs/2505.22637" target="_blank" rel="noopener">Braun et al. (2025)</a>.</span>
+        </p>
+        <p>
+<strong>COBRAS</strong> answers both questions with one object: a Schrödinger Bridge from the undesired to the desired activation distribution, posed on the hypersphere. The bridge's drift gives a steering field that adapts to each activation and reduces to log-density-ratio steering in a limit. The bridge's density says how much support the contrastive data provide for a new prompt, which lets COBRAS leave out-of-distribution prompts alone.
+        </p>
+
+        <h2 id="sphere">Activations live on a sphere</h2>
+        <p>
+At a fixed layer, residual-stream norms barely vary across inputs. For the four models we study, last-token norms on TruthfulQA divided by their layer-wise mean have a coefficient of variation between 2.5% (Qwen2.5-7B) and 7.3% (Mistral-7B), and across the later layers of eight architectures it stays below 15%. Almost all of the variation is in the direction of an activation, so COBRAS models the state space as the unit sphere $\Sph=\{\bx\in\mathbb{R}^d:\lVert\bx\rVert=1\}$. It steers the direction and restores the original norm afterward.
+        </p>
+        <p>
+Two maps move points on $\Sph$. The logarithmic map $\log_{\bx}(\boldsymbol{y})$ is the tangent vector at $\bx$ that points toward $\boldsymbol{y}$ and whose length is the geodesic distance $d_{\Sph}(\bx,\boldsymbol{y})=\arccos(\bx^\top\boldsymbol{y})$. The exponential map walks along a great circle for as far as a tangent vector says:
+        </p>
+        <div class="math-display">$$\exp_{\bx}(\bv)=\cos\!\big(\lVert\bv\rVert\big)\,\bx+\sin\!\big(\lVert\bv\rVert\big)\frac{\bv}{\lVert\bv\rVert},\qquad \log_{\bx}(\boldsymbol{y})=\frac{\theta}{\sin\theta}\,\Pi_{\bx}\boldsymbol{y},\quad \theta=d_{\Sph}(\bx,\boldsymbol{y}),$$</div>
+        <p>
+where $\Pi_{\bx}=\boldsymbol{I}-\bx\bx^\top$ projects onto the tangent space. Every COBRAS update is an exponential-map step, so an activation never leaves the sphere; adding a vector instead would change its norm.
+        </p>
+        <figure class="numbered">
+          <div class="fig" data-chart="explog"></div>
+          <figcaption><b>Moving on the sphere.</b> A great-circle slice of $\Sph$. Drag $\boldsymbol{y}$: the logarithmic map unrolls the arc from $\bx$ to $\boldsymbol{y}$ onto the tangent line, and the exponential map rolls it back. Adding the same tangent vector in Euclidean space lands off the sphere. The shaded shell shows how tightly real activation norms concentrate: ±1 coefficient of variation for the selected model.</figcaption>
+        </figure>
+
+        <h2 id="bridge">Steering as a Schrödinger Bridge</h2>
+        <p>
+Start with the populations rather than single activations. We want to move the undesired distribution $p_-$ onto the desired distribution $p_+$. A trajectory $\bx_{[0,1]}$ records how one activation moves as steering progresses from $t=0$ to $t=1$, and a distribution $P$ over trajectories must start at $P_0=p_-$ and end at $P_1=p_+$. The endpoints alone do not say how activations should travel, so among all such $P$ we take the one closest in KL divergence to a reference process $Q$: Brownian motion on the sphere with diffusion scale $\sigma^2$ and a uniform start, which favors no location and no direction. This is the Schrödinger Bridge problem:<label for="sn-7" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-7" class="margin-toggle"><span class="sidenote">Schrödinger (1932); <a href="https://arxiv.org/abs/1308.0215" target="_blank" rel="noopener">A Survey of the Schrödinger Problem</a> (Léonard, 2013); <a href="https://arxiv.org/abs/2106.01357" target="_blank" rel="noopener">Diffusion Schrödinger Bridge</a> (De Bortoli et al., 2021)</span>
+        </p>
+        <div class="math-display">$$P^\star=\operatorname*{arg\,min}_{P}\;\KL(P\,\Vert\,Q)\qquad\text{s.t.}\qquad P_0=p_-,\quad P_1=p_+ .$$</div>
+        <p>
+Its solution reweights the reference by two positive functions, the Schrödinger potentials: $P^\star(\mathrm{d}\bx_{[0,1]})=\varphi(\bx_0,0)\,\psi(\bx_1,1)\,Q(\mathrm{d}\bx_{[0,1]})$. Propagating $\varphi$ forward and $\psi$ backward along the reference dynamics defines both at every intermediate time, and two facts follow. The density of the bridge at time $t$ is the product of the potentials,
+        </p>
+        <div class="math-display">$$P_t(\bx)\;\propto\;\varphi(\bx,t)\,\psi(\bx,t),$$</div>
+        <p>
+and the bridge has a deterministic probability-flow ODE, whose solutions started from $p_-$ have marginal $P_t$ at every time, with a drift equal to the gradient of the log ratio of the potentials:<label for="sn-8" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-8" class="margin-toggle"><span class="sidenote"><a href="https://arxiv.org/abs/2011.13456" target="_blank" rel="noopener">Score-Based Generative Modeling through Stochastic Differential Equations</a> (Song et al., 2021)</span>
+        </p>
+        <div class="math-display">$$\frac{\mathrm{d}\bx_t}{\mathrm{d}t}=\frac{\sigma^2}{2}\,\nablaS\log\frac{\psi(\bx_t,t)}{\varphi(\bx_t,t)} .$$</div>
+        <p>
+The drift is what COBRAS turns into a steering field. The product becomes its test for whether a prompt is supported by the data.
+        </p>
+
+        <h2 id="fit">Fitting the bridge on contrastive data</h2>
+        <p>
+In practice $p_-$ and $p_+$ are known only through contrastive activations $\mathcal{D}^-=\{\bh_j^-\}_{j=1}^{N_-}$ and $\mathcal{D}^+=\{\bh_i^+\}_{i=1}^{N_+}$. Because the KL objective splits into a term over start and end points plus a term that vanishes when paths follow the reference, the bridge reduces to a static problem over pairs. On the samples, that problem is entropic optimal transport with a geodesic reference coupling:
+        </p>
+        <div class="math-display">$$\widehat{Q}_{01,ji}\propto e^{-c_{ji}},\quad c_{ji}=\frac{d_{\Sph}(\bh_j^-,\bh_i^+)^2}{2\varepsilon},\qquad \widehat{P}^{\star}_{01}=\operatorname*{arg\,min}_{\widehat{P}_{01}}\KL\big(\widehat{P}_{01}\,\Vert\,\widehat{Q}_{01}\big)\;\;\text{s.t.}\;\;\textstyle\sum_i\widehat{P}_{01,ji}=\frac{1}{N_-},\;\sum_j\widehat{P}_{01,ji}=\frac{1}{N_+} .$$</div>
+        <p>
+The optimal plan factorizes just like the continuous bridge, $\widehat{P}^{\star}_{01,ji}=\hat\varphi_{0,j}\,\hat\psi_{1,i}\,\widehat{Q}_{01,ji}$. The Sinkhorn algorithm finds the two potential vectors by alternately rescaling to match each marginal.<label for="sn-9" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-9" class="margin-toggle"><span class="sidenote"><a href="https://arxiv.org/abs/1306.0895" target="_blank" rel="noopener">Sinkhorn Distances</a> (Cuturi, 2013)</span>
+Unlike Schrödinger Bridge solvers for generative modeling, nothing here is a neural network, and fitting is cheap: 13&nbsp;ms on one A100 for $N_+=1{,}311$ and $N_-=1{,}672$ activations.
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-globe="bridge">
+            <div class="globe-row">
+              <div class="globe"></div>
+              <div class="side">
+                <div class="ctrl-grid">
+                  <div class="slider"><span>Regularization</span><input id="bridge-eps" class="eps" type="range" min="3" max="60" step="0.1" value="6.4" aria-label="regularization epsilon"><span class="v eps-v"></span></div>
+                  <div class="slider"><button class="play" type="button" aria-label="play or pause">❚❚</button><input id="bridge-t" class="tt" type="range" min="0" max="1000" value="500" aria-label="bridge time t"><span class="v">$t$ = <span class="t-v">0.50</span></span></div>
+                  <label class="toggle"><input id="bridge-plan" type="checkbox" class="show-plan" checked> Show the transport plan</label>
+                </div>
+                <div class="plan-wrap">
+                  <canvas class="plan-matrix" aria-label="transport plan as a matrix"></canvas>
+                  <div class="mat-cap">The plan $\widehat{P}^\star_{01}$: rows are undesired samples, columns desired samples (left block: upper mode).</div>
+                </div>
+                <dl class="readout">
+                  <dt>desired partners per undesired sample</dt><dd class="partners-v">–</dd>
+                  <dt>mass kept on the same side</dt><dd class="side-v">–</dd>
+                </dl>
+                <div class="key"><span><i class="dot" style="background:var(--minus)"></i>undesired $\mathcal{D}^-$</span><span><i class="dot" style="background:var(--plus)"></i>desired $\mathcal{D}^+$</span><span><i class="dot" style="background:var(--bg); box-shadow:0 0 0 1.5px var(--ink)"></i>bridge particle</span><span><i class="ln" style="background:var(--fg4)"></i>plan</span></div>
+              </div>
+            </div>
+          </div>
+          <figcaption><b>Fitting the bridge.</b> A toy 2-sphere stands in for the activation hypersphere. Gray arcs show the fitted plan (darker means more mass). The outlined dots are particles of the bridge $P_t$: endpoint pairs drawn from the plan, joined by Brownian-bridge paths, colored from brick to blue as $t$ runs from 0 to 1. At the default $\varepsilon$, set by the paper's nearest-neighbor rule, the upper and lower halves of $p_-$ are bridged to different modes of $p_+$, and 95% of the mass stays on its own side. Raising $\varepsilon$ flattens the reference coupling: each undesired activation is bridged to more desired ones and the paths get noisier. As $\varepsilon\to\infty$ the plan becomes uniform, which is the regime of Proposition 1 below.</figcaption>
+        </figure>
+
+        <h2 id="field">A steering field for every activation</h2>
+        <p>
+The fitted potentials are attached to samples, but steering needs a direction at whatever activation $\bx$ the model produces. COBRAS evaluates two weighted kernel sums at $\bx$, with $K_b(\bx,\bh)=\exp\!\big[-d_{\Sph}(\bx,\bh)^2/2b\big]$:
+        </p>
+        <div class="math-display">$$\widetilde{\psi}_b(\bx)=\sum_i\Big[\sum_j\hat\varphi_{0,j}\,\widehat{Q}_{01,ji}\,K_b(\bx,\bh_j^-)\Big]K_b(\bx,\bh_i^+),\qquad \widetilde{\varphi}_b(\bx)=\sum_j\Big[\sum_i\hat\psi_{1,i}\,\widehat{Q}_{01,ji}\,K_b(\bx,\bh_i^+)\Big]K_b(\bx,\bh_j^-).$$</div>
+        <p>
+In $\widetilde{\psi}_b$, the bracket for each desired sample collects the undesired samples that the reference connects to it, weighted by their fitted potentials and by how close they are to $\bx$; the outer kernel adds the desired sample's own proximity. $\widetilde{\varphi}_b$ swaps the roles. Mirroring the drift of the probability-flow ODE, the steering field is $\bv(\bx)=b\,\nablaS\log\big(\widetilde{\psi}_b(\bx)/\widetilde{\varphi}_b(\bx)\big)$, with the brackets held fixed while differentiating. Written out, it is a pull minus a push:
+        </p>
+        <div class="math-display">$$\bv(\bx)=\underbrace{\sum_i w_i^+(\bx)\,\log_{\bx}(\bh_i^+)}_{\text{attraction}}\;-\;\underbrace{\sum_j w_j^-(\bx)\,\log_{\bx}(\bh_j^-)}_{\text{repulsion}},$$</div>
+        <p>
+where the weights $w^\pm(\bx)$ are positive and sum to one within each population. Both the pull and the push depend on where $\bx$ is, so two activations a short distance apart can be sent to different parts of $p_+$.
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-globe="field">
+            <div class="fig-controls">
+              <div class="tabs" role="tablist" aria-label="steering rule">
+                <button class="tab on" type="button" role="tab" aria-selected="true" data-method="cobras">COBRAS field</button>
+                <button class="tab" type="button" role="tab" aria-selected="false" data-method="fixed">Fixed direction</button>
+              </div>
+              <label class="toggle cobras-only"><input id="field-gate" type="checkbox" data-gate checked> Support gate</label>
+            </div>
+            <div class="globe-row">
+              <div class="globe"></div>
+              <div class="side">
+                <div>
+                  <h4>Steer an activation from</h4>
+                  <div class="presets">
+                    <button class="chip" type="button" data-preset="upper">upper $p_-$</button>
+                    <button class="chip" type="button" data-preset="lower">lower $p_-$</button>
+                    <button class="chip" type="button" data-preset="between">between</button>
+                    <button class="chip" type="button" data-preset="near">near $p_+$</button>
+                    <button class="chip" type="button" data-preset="ood">an unsupported prompt</button>
+                    <button class="chip clear" type="button">clear</button>
+                  </div>
+                  <p class="hint" style="margin:8px 0 0">or click anywhere on the sphere</p>
+                </div>
+                <dl class="readout">
+                  <dt>alignment $s(\bx_0)$</dt><dd data-out="s">—</dd>
+                  <dt>gate $g(\bx_0)$</dt><dd data-out="g">—</dd>
+                  <dt>angle to $\bmu$, $\theta_0$</dt><dd data-out="th">—</dd>
+                  <dt>distance traveled</dt><dd data-out="arc">—</dd>
+                  <dd class="wide" data-out="end">Pick a starting point.</dd>
+                </dl>
+                <div class="key">
+                  <span><i class="ln" style="background:var(--plus)"></i>attraction $w^+$</span>
+                  <span><i class="ln" style="background:var(--minus)"></i>repulsion $w^-$</span>
+                  <span><i class="dot" style="background:var(--ink)"></i>start $\bx_0$</span>
+                  <span><i class="ring"></i>gated, not moved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <figcaption><b>The steering field.</b> Each run takes $K=10$ geodesic Euler steps (white dots). Thin lines show the weights at the current step: blue lines pull toward desired samples, brick lines push away from undesired ones, and the two thick arrows are the resulting averages. Starting points in the upper and lower halves of $p_-$ head to different modes of $p_+$, and points that already sit near $p_+$ barely move. <i>Fixed direction</i> instead adds the same vector, the difference of means, to every activation and then restores the norm; it carries most of the cloud into the gap between the modes. In this toy, $\varepsilon$ and $b$ are set for a few dozen points on a 2-sphere; the paper's settings for real models are listed with the algorithm below.</figcaption>
+        </figure>
+
+        <h2 id="strength">How far to steer, and whether to steer at all</h2>
+        <p>
+The field only sets a direction. COBRAS normalizes it and sets the step length with two factors.
+        </p>
+        <p>
+<span class="lead-in">Alignment.</span> An activation that already looks desired should move less. Let $\bmu$ be the normalized difference between the desired and undesired means. Following SphericalSteer, COBRAS compares von Mises–Fisher scores for $\bmu$ and $-\bmu$ and keeps the undesired share:
+        </p>
+        <div class="math-display">$$s(\bx)=\frac{e^{-\kappa\cos(\bx,\bmu)}}{e^{-\kappa\cos(\bx,\bmu)}+e^{\kappa\cos(\bx,\bmu)}}=\frac{1}{1+e^{2\kappa\cos(\bx,\bmu)}} .$$</div>
+        <p>
+<span class="lead-in">Support.</span> Alignment says nothing about whether the contrastive data cover a prompt at all: a math problem can sit on the undesired side of $\bmu$ and still receive a large $s$. The bridge's density is the product of its potentials, so COBRAS turns the fitted potentials into two kernel sums with a small bandwidth $b_g$ and scores a prompt's last-token activation by
+        </p>
+        <div class="math-display">$$u(\bx)=-\log\Big[\underbrace{\textstyle\sum_j\hat\varphi_{0,j}\,K_{b_g}(\bx,\bh_j^-)}_{\widehat{\varphi}_{b_g}(\bx)}\;\underbrace{\textstyle\sum_i\hat\psi_{1,i}\,K_{b_g}(\bx,\bh_i^+)}_{\widehat{\psi}_{b_g}(\bx)}\Big],$$</div>
+        <p>
+where a larger $u$ means less support. To calibrate it, COBRAS compares $u(\bx)$ with the scores of held-out in-distribution prompts $\mathcal{D}_{\mathrm{ref}}$: the percentile $r(\bx)$ is the fraction of reference prompts that score lower, and the gate
+        </p>
+        <div class="math-display">$$g(\bx)=\min\Big\{1,\;\frac{1-r(\bx)}{1-p}\Big\}$$</div>
+        <p>
+leaves the step untouched up to the coverage percentile $p$, ramps it down linearly above it, and switches steering off once $u(\bx)$ exceeds every reference score. Calibration uses no out-of-distribution prompts. The gate is computed once at the last prompt token and reused for every generated token.
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-globe="strength">
+            <div class="fig-controls">
+              <div style="display:flex; gap:16px; flex-wrap:wrap">
+                <label class="toggle"><input id="strength-use-s" type="checkbox" data-use="s" checked> alignment $s$</label>
+                <label class="toggle"><input id="strength-use-g" type="checkbox" data-use="g" checked> support gate $g$</label>
+              </div>
+              <span class="hint">hover the sphere to read off each factor</span>
+            </div>
+            <div class="globe-row">
+              <div class="globe"></div>
+              <div class="side">
+                <div class="ctrl-grid">
+                  <div class="slider"><span>Concentration</span><input id="strength-kappa" class="kappa" type="range" min="0" max="8" step="0.1" value="3" aria-label="kappa"><span class="v kappa-v"></span></div>
+                  <div class="slider"><span>Coverage</span><input id="strength-cov" class="cov" type="range" min="0.5" max="0.95" step="0.01" value="0.7" aria-label="coverage p"><span class="v cov-v"></span></div>
+                </div>
+                <div class="plots">
+                  <div><div class="plot-title">$s$ against $\cos(\bx,\bmu)$</div><svg class="mini s-plot" viewBox="0 0 220 110" role="img" aria-label="alignment coefficient curve"></svg></div>
+                  <div><div class="plot-title">$g$ against percentile $r$</div><svg class="mini g-plot" viewBox="0 0 220 110" role="img" aria-label="support gate ramp"></svg></div>
+                </div>
+                <dl class="readout">
+                  <dt>$\cos(\bx,\bmu)$</dt><dd data-out="cos">—</dd>
+                  <dt>$s(\bx)$</dt><dd data-out="s">—</dd>
+                  <dt>percentile $r(\bx)$</dt><dd data-out="r">—</dd>
+                  <dt>$g(\bx)$</dt><dd data-out="g">—</dd>
+                  <dt>total step $T s g\,\theta_0$</dt><dd data-out="arc">—</dd>
+                </dl>
+                <div class="key"><span><i class="dot" style="background:var(--step-hi)"></i>long step</span><span><i class="dot" style="background:var(--step-lo); box-shadow: 0 0 0 1px var(--rule-strong)"></i>short step</span><span><i class="dot" style="background:var(--ref-dot); width:6px; height:6px"></i>reference prompts</span></div>
+              </div>
+            </div>
+          </div>
+          <figcaption><b>How far COBRAS moves an activation, by starting point.</b> Shading shows the total geodesic step $T\,s(\bx)\,g(\bx)\,\theta_0$ on the toy sphere; unshaded regions are not steered. The alignment coefficient shortens steps on the desired side of $\bmu$. The gate switches steering off away from the contrastive data, beyond what the reference prompts (small gray dots) cover. Lower the coverage $p$ to attenuate more prompts, or raise the concentration $\kappa$ to make $s$ switch more sharply.</figcaption>
+        </figure>
+
+        <h2 id="procedure">The full procedure</h2>
+        <p>
+For each token, COBRAS fixes the step length from the starting activation $\bx_0$, scaled by its angle $\theta_0=\arccos\cos(\bx_0,\bmu)$ to the contrastive axis. It then takes $K$ geodesic Euler steps, re-evaluating the field after each one:
+        </p>
+        <div class="math-display">$$\Delta=\frac{T}{K}\,s(\bx_0)\,g_{\mathrm{prompt}}\,\theta_0,\qquad \bx_{k+1}=\exp_{\bx_k}\!\Big(\Delta\,\frac{\bv(\bx_k)}{\lVert\bv(\bx_k)\rVert}\Big).$$</div>
+        <div class="box algo" role="group" aria-label="Algorithm 1">
+          <p class="box-title"><span class="num">Algorithm 1</span> &nbsp;COBRAS</p>
+          <p class="req"><span class="kw">Require:</span> contrastive activations $\mathcal{D}^\pm\subset\Sph$, reference prompts $\mathcal{D}_{\mathrm{ref}}\subset\Sph$, regularization $\varepsilon$, support bandwidth $b_g$, horizon $T$, coverage $p$, steps $K$, concentration $\kappa$</p>
+          <p class="phase">Offline fitting and calibration</p>
+          <ol>
+            <li>Form the reference weights $\widehat{Q}_{01,ji}\propto e^{-c_{ji}}$</li>
+            <li>Fit the potentials $\hat\varphi_{0,j}$, $\hat\psi_{1,i}$ with Sinkhorn</li>
+            <li>Compute the contrastive axis $\bmu$</li>
+            <li>Store the sorted reference scores $u(\boldsymbol{z})$ for $\boldsymbol{z}\in\mathcal{D}_{\mathrm{ref}}$</li>
+          </ol>
+          <p class="phase">Online steering of $\bx_0\in\Sph$, starting with the last prompt token</p>
+          <ol start="5">
+            <li><span class="kw">if</span> $\bx_0$ is the last prompt token <span class="kw">then</span> compute $g_{\mathrm{prompt}}\gets g(\bx_0)$ and cache it <span class="kw">else</span> reuse the cached $g_{\mathrm{prompt}}$</li>
+            <li>Evaluate $s(\bx_0)$ and the step size $\Delta$; <span class="kw">if</span> $\Delta=0$ <span class="kw">return</span> $\bx_0$</li>
+            <li><span class="kw">for</span> $k=0,\dots,K-1$ <span class="kw">do</span></li>
+            <li><span class="ind">$\bv_k\gets\bv(\bx_k)$ <span class="cm">&nbsp;attraction minus repulsion</span></span></li>
+            <li><span class="ind">$\bx_{k+1}\gets\exp_{\bx_k}(\Delta\,\bv_k/\lVert\bv_k\rVert)$ <span class="cm">&nbsp;(or $\bx_{k+1}\gets\bx_k$ if $\bv_k=\boldsymbol{0}$)</span></span></li>
+            <li><span class="kw">return</span> $\bx_K$, rescaled to the original norm</li>
+          </ol>
+        </div>
+        <p>
+In the experiments, $K=10$ and $\kappa=20$, and $\varepsilon$ is the squared median 5-nearest-neighbor geodesic distance in $\mathcal{D}^+\cup\mathcal{D}^-$. Sinkhorn runs five sweeps, and the support bandwidth is $b_g=\varepsilon/256$. The field uses a separate bandwidth for each population, equal to the largest squared distance from $\bx$ to that population.
+        </p>
+
+        <h2 id="unified">Steering methods as log-density-ratio flows</h2>
+        <p>
+The bridge view also explains where the usual steering objective comes from. As $\varepsilon\to\infty$, the reference coupling becomes uniform, the bracketed coefficients become constants, and they drop out of the logarithmic gradient.
+        </p>
+        <div class="box prop">
+          <p class="box-title"><span class="num">Proposition 1</span> &nbsp;Reduction to the log-density-ratio field</p>
+          <p>Fix the contrastive sets $\mathcal{D}^-$, $\mathcal{D}^+$ on $\Sph$ and the bandwidth $b>0$. As $\varepsilon\to\infty$, the field $\bv$ converges uniformly, at rate $O(1/\varepsilon)$, to the gradient of the log ratio of the two kernel density estimates:</p>
+          <div class="math-display">$$\bv^{\mathrm{kde}}_b(\bx)=b\,\nablaS\log\frac{\hat p^{+}_b(\bx)}{\hat p^{-}_b(\bx)} .$$</div>
+        </div>
+        <p>
+At finite $\varepsilon$, the field also uses the transport between the two datasets; in the limit it sees only their separate densities. Many existing methods follow the same log-density-ratio flow, $\dot{\bx}_t=\nabla_{\mathcal{M}}\log\big(p_+(\bx_t)/p_-(\bx_t)\big)$, each with a particular geometry, number of steps, and density model:
+        </p>
+        <figure class="table">
+          <figcaption>Steering directions as log-density-ratio gradients, up to positive scaling.</figcaption>
+          <div class="scroll-x">
+          <table class="mt">
+            <thead><tr><th>Method</th><th class="c">Manifold $\mathcal{M}$</th><th class="c">Steps $K$</th><th>Density model</th><th>Induced direction</th></tr></thead>
+            <tbody>
+              <tr><td>CAA</td><td class="c">$\mathbb{R}^d$</td><td class="c">1</td><td>$p_\pm=\mathcal{N}(\bmu_\pm,\boldsymbol{I}_d)$</td><td>constant, $\bmu_+-\bmu_-$</td></tr>
+              <tr><td>SphericalSteer</td><td class="c">$\Sph$</td><td class="c">1</td><td>$p_+=\mathrm{vMF}(\bmu,\kappa)$, $p_-=\mathrm{Unif}(\Sph)$</td><td>Slerp toward $\bmu$, $\propto\Pi_{\bx}\bmu$</td></tr>
+              <tr><td>ITI (probe)</td><td class="c">$\mathbb{R}^{d_h}$</td><td class="c">1</td><td>linear logistic probe $p_{\boldsymbol{\theta}}(\bx)$</td><td>probe normal $\boldsymbol{\theta}$</td></tr>
+              <tr><td>HPR</td><td class="c">$\Sph$</td><td class="c">1</td><td>linear probe, Householder reflector $\boldsymbol{H}$</td><td>initial Slerp toward $\boldsymbol{H}\bx$ if $\boldsymbol{\theta}^\top\bx&lt;0$</td></tr>
+              <tr><td>ODESteer</td><td class="c">$\mathbb{R}^d$</td><td class="c">&gt;1</td><td>polynomial count-sketch $\boldsymbol{w}^\top\boldsymbol{\Phi}(\bx)+\beta$</td><td>$\boldsymbol{J}_{\boldsymbol{\Phi}}(\bx)^\top\boldsymbol{w}\,/\,\lVert\boldsymbol{J}_{\boldsymbol{\Phi}}(\bx)^\top\boldsymbol{w}\rVert$</td></tr>
+              <tr class="ours"><td>COBRAS</td><td class="c">$\Sph$</td><td class="c">&gt;1</td><td>spherical kernels, fitted Schrödinger potentials</td><td>$\sum_i w_i^+\log_{\bx}(\bh_i^+)-\sum_j w_j^-\log_{\bx}(\bh_j^-)$</td></tr>
+            </tbody>
+          </table>
+          </div>
+        </figure>
+
+        <h2 id="results">Helpfulness, truthfulness, detoxification</h2>
+        <p>
+We compare COBRAS with RepE, ITI, CAA, MiMiC, Linear-AcT, SphericalSteer, and ODESteer on four base models (Falcon-7B, Mistral-7B, LLaMA3.1-8B, and Qwen2.5-7B) and three objectives, following ODESteer's setup. Helpfulness on UltraFeedback is measured by win rate against the unsteered model under a reward model. Truthfulness on TruthfulQA is the share of answers judged both true and informative (True×Info). Detoxification on RealToxicityPrompts is measured by Perspective API toxicity. Every number is a mean over three seeds.
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-chart="indist">
+            <div class="fig-controls">
+              <div class="tabs" role="tablist" aria-label="task">
+                <button class="tab on" type="button" data-task="uf">Helpfulness</button>
+                <button class="tab" type="button" data-task="tqa">Truthfulness</button>
+                <button class="tab" type="button" data-task="tox">Detoxification</button>
+              </div>
+              <div class="legend" aria-hidden="true"><span><i class="sw-dot" style="background:var(--plus)"></i>COBRAS</span><span><i class="sw-dot" style="background:var(--base-dot)"></i>baselines</span><span><i class="sw-sq"></i>original model</span><span><i class="sw-line" style="background:var(--fg5)"></i>± std</span></div>
+            </div>
+            <div class="scroll-x"><svg class="chart" role="img"></svg></div>
+            <details class="data"><summary>Show the numbers</summary><div class="scroll-x tbl"></div></details>
+          </div>
+          <figcaption><b>In-distribution steering on four models.</b> Primary metric per task, mean ± standard deviation over three seeds; hover a row for the secondary metrics. The vertical line marks the unsteered model. COBRAS is best on the primary metric in 11 of 12 settings; the exception is detoxification on Falcon-7B, where CAA is less toxic at a perplexity of 75.6, against 15.3 for COBRAS.</figcaption>
+        </figure>
+        <p>
+COBRAS improves the primary metric over the unsteered model for every task and model. It has the highest UltraFeedback win rate on all four models, improving on the unsteered model by 2.8, 7.1, 9.7, and 1.9 points. It also has the highest TruthfulQA True×Info on all four, with the largest gains on Mistral-7B (+29.5) and LLaMA3.1-8B (+25.1). It reduces toxicity by 41–54% relative to the unsteered models and is the least toxic on three of four. Other methods win individual metrics, often by giving up informativeness, perplexity, or diversity; COBRAS is the most consistent across all three objectives.
+        </p>
+
+        <h2 id="ood">Steering without breaking other skills</h2>
+        <p>
+A steering field fitted on TruthfulQA is applied to every prompt the model sees. To test what that does elsewhere, we fit every method on TruthfulQA and evaluate it on Natural Questions and TriviaQA (shifts within the same task) and on MMLU and GSM8K (shifts to other tasks), with the support gate on for COBRAS. Several strong baselines raise TruthfulQA while losing much of their GSM8K and MMLU accuracy. Across LLaMA3.1-8B, Mistral-7B, and Qwen2.5-7B, COBRAS reaches the largest or near-largest TruthfulQA gains while keeping OOD accuracy close to the unsteered model.
+        </p>
+        <p>
+The gate does this by recognizing prompts it has no data for. Its score separates TruthfulQA from each OOD prompt set with an AUROC between 84% and 100%. At coverage $p=0.7$, the average fraction of the step that survives drops from 85% on held-out TruthfulQA prompts to at most 7.3% on GSM8K and essentially zero on MMLU. NQ and TriviaQA reuse TruthfulQA's instruction format and keep more of the step.
+        </p>
+        <figure class="numbered">
+          <div class="fig" data-chart="gatebars">
+            <div class="fig-controls">
+              <div class="tabs" role="tablist" aria-label="model">
+                <button class="tab on" type="button" data-model="llama">LLaMA3.1-8B</button>
+                <button class="tab" type="button" data-model="mistral">Mistral-7B</button>
+              </div>
+            </div>
+            <svg class="chart" role="img"></svg>
+            <details class="data"><summary>Show the numbers</summary><div class="scroll-x tbl"></div></details>
+          </div>
+          <figcaption><b>How much steering each prompt set receives.</b> Mean gate $g$ at coverage $p=0.7$: the fraction of the COBRAS step left after gating, averaged over prompts. TruthfulQA is the calibration set; the other four are out of distribution. Hover a bar for the AUROC of the support score.</figcaption>
+        </figure>
+        <p>
+Gating is not specific to COBRAS. The support score motivates a simpler external gate that scales any method's displacement by its $k$-th nearest-neighbor distance to the undesired samples.<label for="sn-10" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-10" class="margin-toggle"><span class="sidenote">Following <a href="https://arxiv.org/abs/2204.06507" target="_blank" rel="noopener">Out-of-Distribution Detection with Deep Nearest Neighbors</a> (Sun et al., 2022). In the small-bandwidth limit, $2b_g\,u(\bx)$ tends to the sum of squared nearest-neighbor distances to $\mathcal{D}^-$ and $\mathcal{D}^+$.</span>
+On LLaMA3.1-8B this gate brings GSM8K and MMLU back to near-unsteered levels for CAA, ODESteer, and SphericalSteer too. It costs each method 1.8–4.5 points of True×Info, and with the same gate COBRAS still scores highest. COBRAS's own support gate keeps more of the gain than the kNN gate (64.8 against 63.6 True×Info).
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-chart="gating">
+            <div class="fig-controls">
+              <div class="tabs" role="tablist" aria-label="OOD benchmark">
+                <button class="tab on" type="button" data-y="gsm">GSM8K</button>
+                <button class="tab" type="button" data-y="mmlu">MMLU</button>
+              </div>
+              <div class="legend" aria-hidden="true"><span><i class="sw-ring" style="border-color:var(--base-dot)"></i>no gate</span><span><i class="sw-dot" style="background:var(--base-dot)"></i>kNN gate</span><span><i class="sw-dot" style="background:var(--plus); border-radius:2px; transform:rotate(45deg); width:9px; height:9px"></i>COBRAS support gate</span><span><i class="sw-sq"></i>unsteered</span></div>
+            </div>
+            <div class="scroll-x"><svg class="chart" role="img"></svg></div>
+            <details class="data"><summary>Show the numbers</summary><div class="scroll-x tbl"></div></details>
+          </div>
+          <figcaption><b>Gating restores out-of-distribution accuracy (LLaMA3.1-8B).</b> Each arrow runs from a method without a gate to the same method with the kNN gate. Without a gate, every method trades GSM8K and MMLU accuracy for TruthfulQA gains; with one, all four keep near-unsteered OOD accuracy, and COBRAS remains the best on TruthfulQA. Upper right is better.</figcaption>
+        </figure>
+        <p>
+The coverage $p$ is the knob between the two goals. A higher $p$ steers more prompts, which raises True×Info and eventually starts to cost OOD accuracy.
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-chart="coverage">
+            <div class="fig-controls">
+              <div class="tabs" role="tablist" aria-label="model">
+                <button class="tab on" type="button" data-model="llama">LLaMA3.1-8B</button>
+                <button class="tab" type="button" data-model="mistral">Mistral-7B</button>
+                <button class="tab" type="button" data-model="qwen">Qwen2.5-7B</button>
+              </div>
+              <div class="slider" style="min-width:260px"><span>Coverage</span><input id="coverage-p" class="cov" type="range" min="0" max="3" step="1" value="1" aria-label="coverage p"><span class="v cov-v"></span></div>
+            </div>
+            <div class="scroll-x"><svg class="chart" role="img"></svg></div>
+            <details class="data"><summary>Show the numbers</summary><div class="scroll-x tbl"></div></details>
+          </div>
+          <figcaption><b>Coverage trades TruthfulQA gains against OOD accuracy.</b> Change from the unsteered model, in percentage points, as the coverage $p$ of the support gate varies; horizon $T=0.65$ for LLaMA3.1-8B and Mistral-7B and $T=0.4$ for Qwen2.5-7B. On Qwen2.5-7B the OOD accuracies do not move at any tested coverage.</figcaption>
+        </figure>
+        <details class="paperfigs">
+          <summary>All methods and models: the OOD plots from the paper</summary>
+          <img src="static/img/within-task-ood.png" alt="Scatter plots of TriviaQA and NQ accuracy against TruthfulQA True×Info for all steering methods on LLaMA3.1-8B, Mistral-7B and Qwen2.5-7B" loading="lazy">
+          <p>Within-task shift. Answer-ranking accuracy on TriviaQA and NQ against TruthfulQA True×Info; upper right is better.</p>
+          <img src="static/img/cross-task-ood.png" alt="Scatter plots of GSM8K and MMLU accuracy against TruthfulQA True×Info for all steering methods on LLaMA3.1-8B, Mistral-7B and Qwen2.5-7B" loading="lazy">
+          <p>Cross-task shift. GSM8K and MMLU accuracy against TruthfulQA True×Info. Falcon-7B is omitted because its unsteered accuracy is low.</p>
+        </details>
+
+        <h2 id="examples">What the answers look like</h2>
+        <p>
+A few generations from the paper. The first two compare COBRAS with ODESteer and SphericalSteer on a TruthfulQA question and on an out-of-distribution GSM8K problem. The other two show every method on one TruthfulQA question and one UltraFeedback prompt.
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-examples>
+            <div class="fig-controls">
+              <div class="tabs ex-tabs" role="tablist" aria-label="example"></div>
+              <div class="tabs ex-models" role="tablist" aria-label="model" hidden></div>
+            </div>
+            <div class="ex-body"></div>
+          </div>
+          <figcaption><b>Sample generations.</b> Responses are reproduced verbatim from the paper (Figure 2 and Appendix I), including cut-off generations. Check and cross marks in the first two examples are the paper's. For the other two we show the dataset's reference answers instead of marking responses ourselves.</figcaption>
+        </figure>
+
+        <h2 id="ablations">What each part does, and what it costs</h2>
+        <p>
+On LLaMA3.1-8B, every component matters. Replacing geodesic quantities with Euclidean ones lowers True×Info from 63.6 to 61.5 and GSM8K from 49.5 to 15.1, because the Euclidean gate attenuates OOD prompts much less. Removing the alignment coefficient raises truthfulness but collapses informativeness, leaving True×Info at 34.3; shortening the horizon to match the average step only recovers 50.4. Removing the gate gives the best True×Info, 67.6, at the price of GSM8K (0.6) and MMLU (44.4). Uniform sample weights have the smallest effect (62.9).
+        </p>
+        <figure class="numbered wide">
+          <div class="fig" data-chart="ablation">
+            <div class="scroll-x"><svg class="chart" role="img"></svg></div>
+            <details class="data"><summary>Show the numbers</summary><div class="scroll-x tbl"></div></details>
+          </div>
+          <figcaption><b>Component ablations on LLaMA3.1-8B</b> (layer 13, $T=0.65$, $K=10$, coverage $p=0.7$). TruthfulQA True×Info (mean over three seeds) and GSM8K accuracy; the gray line marks the unsteered model. MMLU is 61.6 for every variant except without the gate (44.4); see the numbers.</figcaption>
+        </figure>
+        <p>
+Fitting runs offline in milliseconds, and the gate is evaluated once per prompt. At decoding time, each steered token needs $K$ field evaluations, each costing $O(N_-N_+ + d(N_-+N_+))$. With full contrastive sets and $K=10$, COBRAS adds 32% to the decoding time per step on LLaMA3.1-8B. Using a quarter of each contrastive set and $K=2$ brings that down to 7%, for 1.8 points of True×Info.
+        </p>
+        <figure class="table">
+          <figcaption>Decoding overhead on LLaMA3.1-8B (A100, float32, batch 10, 50 greedy steps), relative to unsteered decoding, with ungated steering at $T=0.5$.</figcaption>
+          <table class="dt">
+            <thead><tr><th>Configuration</th><th>$K$</th><th>Overhead (%) ↓</th><th>True×Info (%) ↑</th></tr></thead>
+            <tbody>
+              <tr><td>Full contrastive sets</td><td>10</td><td>32</td><td>67.5</td></tr>
+              <tr><td>25% of each contrastive set</td><td>10</td><td>30</td><td>66.5</td></tr>
+              <tr class="ours"><td>25% of each contrastive set</td><td>2</td><td>7</td><td>65.7</td></tr>
+              <tr><td>64 nearest samples per contrastive set</td><td>10</td><td>22</td><td>61.6</td></tr>
+            </tbody>
+          </table>
+        </figure>
+
+        <h2 id="limitations">Limitations</h2>
+        <p>
+The density-ratio reduction assumes a shared, fixed bandwidth and vanishing transport costs, and it does not show that the practical adaptive steering rule is optimal. Pairwise distances and Sinkhorn updates scale with $N_+N_-$, which limits very large contrastive sets: at 100,000 samples per set, the cost matrix alone takes 37.3&nbsp;GiB. The spherical model rests on norm concentration, which holds tightly for the models studied but more loosely in some layers of Gemma-2-2B and GPT-OSS-20B. Natural next steps are a theory for the adaptive rule, generative bridge solvers such as Iterative Markovian Fitting,<label for="sn-11" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-11" class="margin-toggle"><span class="sidenote"><a href="https://arxiv.org/abs/2303.16852" target="_blank" rel="noopener">Diffusion Schrödinger Bridge Matching</a> (Shi et al., 2023)</span>
+and learned or more general Riemannian geometries. Support gating also does not guarantee safe behavior: steering can be redirected toward harmful behavior, and biased contrastive data can reinforce biases, so deployment needs evaluation and safeguards suited to the application.
+        </p>
+
+        <h2 id="citation">Citation</h2>
+        <div class="bibwrap">
+<button class="copy" type="button">copy</button><pre class="citation-block bib">@inproceedings{dalili2026cobras,
+  title     = {Conditional Optimal Bridge for Riemannian Activation Steering},
+  author    = {Dalili, Seyed Arshan and Sridhar, Ajay Narayanan and
+               Narayanan, Vijaykrishnan and Mahdavi, Mehrdad},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2026},
+  url       = {https://arxiv.org/abs/2607.10517}
+}</pre>
+        </div>
+      </article>
+    </div>
+
+    <footer class="site-footer">
+      COBRAS · NeurIPS 2026 · <a href="https://arxiv.org/abs/2607.10517" target="_blank" rel="noopener">arXiv:2607.10517</a> · <a href="https://github.com/arshandalili/cobras" target="_blank" rel="noopener">github.com/arshandalili/cobras</a>
+    </footer>
+  </body>
+</html>
